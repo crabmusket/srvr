@@ -1,41 +1,43 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Data.Text.Lazy
-import Options.Applicative
+import qualified Data.Text.Lazy as T
+import qualified Options.Applicative as O
 import qualified Web.Scotty as S
 
+main :: IO ()
 main = do
-    opts <- execParser optionParser
-    S.scotty (port opts) $ app opts
+    opts <- O.execParser optionParser
+    S.scotty (getPort opts) (app opts)
     where
-        optionParser = info (helper <*> getOptions) $
-            fullDesc <>
-            progDesc "Run a simple web server that displays your chosen message." <>
-            header "server"
+        optionParser = O.info (O.helper <*> getOptions) $
+            O.header "server" <>
+            O.progDesc "Run a simple web server that displays your chosen message." <>
+            O.fullDesc
 
+app :: Options -> S.ScottyM ()
 app opts = do
     S.get "/" $ do
-        S.html $ pack $ message opts
+        S.html $ T.pack $ getMessage opts
 
-data Options = Options {
-    port :: Int,
-    message :: String
- } deriving Show
+data Options = Options
+    { getPort :: Int
+    , getMessage :: String
+    } deriving Show
 
 getOptions :: Parser Options
 getOptions = Options
     <$> portOption
     <*> messageOption
     where
-        portOption =  option auto $
-            metavar "PORT" <>
-            long "port" <>
-            short 'p' <> 
-            value 80 <>
-            help "Port to bind to"
-        messageOption = strOption $
-            metavar "MSG" <>
-            long "message" <>
-            short 'm' <>
-            value "Beam me up, Scotty!" <>
-            help "Message to display at root route"
+        portOption = O.option O.auto $
+            O.metavar "PORT" <>
+            O.long "port" <>
+            O.short 'p' <> 
+            O.value 80 <>
+            O.help "Port to bind to"
+        messageOption = O.strOption $
+            O.metavar "MSG" <>
+            O.long "message" <>
+            O.short 'm' <>
+            O.value "Beam me up, Scotty!" <>
+            O.help "Message to display at root route"
